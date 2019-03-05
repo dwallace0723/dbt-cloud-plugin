@@ -24,7 +24,7 @@ default_args = {
 dag = DAG('dbt_cloud_hourly_dag', concurrency=1, max_active_runs=1, catchup=False, schedule_interval='0 * * * *', default_args=default_args)
 dag.doc_md = __doc__
 
-# Run the cashflow DAG through dbt cloud.
+# Run hourly DAG through dbt cloud.
 run_dbt_cloud_job = DbtCloudRunJobOperator(
     task_id='run_dbt_cloud_job',
     dbt_cloud_conn_id='dbt_cloud',
@@ -32,7 +32,7 @@ run_dbt_cloud_job = DbtCloudRunJobOperator(
     job_name='Hourly Job',
     dag=dag)
 
-# Watch the progress of the cashflow DAG.
+# Watch the progress of the DAG.
 watch_dbt_cloud_job = DbtCloudJobSensor(
     task_id='watch_dbt_cloud_job',
     dbt_cloud_conn_id='dbt_cloud',
