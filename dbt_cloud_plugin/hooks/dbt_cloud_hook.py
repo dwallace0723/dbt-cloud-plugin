@@ -44,12 +44,12 @@ class DbtCloudHook(BaseHook):
 
         return DbtCloud(dbt_cloud_account_id, dbt_cloud_api_token)
 
-    def get_job_status(self, project_id, job_id):
+    def get_run_status(self, run_id):
         """
-        Return the status of an dbt Cloud job.
+        Return the status of an dbt cloud run.
         """
 
         dbt_cloud = self.get_conn()
-        job = dbt_cloud.try_get_job_run(project_id=project_id, job_id=job_id)
-        status_name = RunStatus.lookup(job['status'])
+        run = dbt_cloud.try_get_run(run_id=run_id)
+        status_name = RunStatus.lookup(run['status'])
         return status_name

@@ -4,13 +4,11 @@ dbt Cloud Hourly DAG
 
 from airflow import DAG, utils
 from airflow.operators import DbtCloudRunJobOperator
-from airflow.sensors import DbtCloudJobSensor
+from airflow.sensors import DbtCloudRunSensor
 from datetime import datetime,timedelta
 import pendulum
 
 local_tz = pendulum.timezone("America/Los_Angeles")
-
-PROJECT_ID = your_dbt_cloud_project_id
 
 default_args = {
     'owner': 'dwall',
@@ -28,16 +26,14 @@ dag.doc_md = __doc__
 run_dbt_cloud_job = DbtCloudRunJobOperator(
     task_id='run_dbt_cloud_job',
     dbt_cloud_conn_id='dbt_cloud',
-    project_id=PROJECT_ID,
     job_name='Hourly Job',
     dag=dag)
 
 # Watch the progress of the DAG.
-watch_dbt_cloud_job = DbtCloudJobSensor(
+watch_dbt_cloud_job = DbtCloudRunSensor(
     task_id='watch_dbt_cloud_job',
     dbt_cloud_conn_id='dbt_cloud',
-    project_id=PROJECT_ID,
-    job_id="{{ task_instance.xcom_pull('run_dbt_cloud_job', key='return_value') }}",
+    job_id="{{ task_instance.xcom_pull(task_ids='run_dbt_cloud_job', dag_id='dbt_cloud_hourly_dag', key='return_value') }}",
     sla=timedelta(minutes=45),
     dag=dag)
 
