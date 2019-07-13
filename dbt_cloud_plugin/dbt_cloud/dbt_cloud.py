@@ -3,6 +3,8 @@ import json
 import requests
 import time
 
+from airflow.exceptions import AirflowException
+
 class DbtCloud(object):
     """
     Class for interacting with the dbt Cloud API
