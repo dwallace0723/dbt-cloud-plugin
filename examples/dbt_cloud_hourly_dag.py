@@ -19,7 +19,15 @@ default_args = {
     'provide_context': True
 }
 
-dag = DAG('dbt_cloud_hourly_dag', concurrency=1, max_active_runs=1, catchup=False, schedule_interval='0 * * * *', default_args=default_args)
+dag = DAG(
+    'dbt_cloud_hourly_dag',
+    concurrency=1,
+    max_active_runs=1,
+    catchup=False,
+    schedule_interval='0 * * * *',
+    default_args=default_args
+)
+
 dag.doc_md = __doc__
 
 # Run hourly DAG through dbt cloud.
