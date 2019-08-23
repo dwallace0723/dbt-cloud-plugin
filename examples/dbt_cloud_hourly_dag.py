@@ -41,7 +41,7 @@ run_dbt_cloud_job = DbtCloudRunJobOperator(
 watch_dbt_cloud_job = DbtCloudRunSensor(
     task_id='watch_dbt_cloud_job',
     dbt_cloud_conn_id='dbt_cloud',
-    job_id="{{ task_instance.xcom_pull(task_ids='run_dbt_cloud_job', dag_id='dbt_cloud_hourly_dag', key='return_value') }}",
+    run_id="{{ task_instance.xcom_pull(task_ids='run_dbt_cloud_job', dag_id='dbt_cloud_hourly_dag', key='return_value') }}",
     sla=timedelta(minutes=45),
     dag=dag)
 
