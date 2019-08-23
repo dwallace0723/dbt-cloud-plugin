@@ -1,6 +1,8 @@
-from dbt_cloud_plugin.dbt_cloud.dbt_cloud import DbtCloud
 from airflow.hooks.base_hook import BaseHook
 from airflow.exceptions import AirflowException
+
+from dbt_cloud_plugin.dbt_cloud.dbt_cloud import DbtCloud
+
 
 class RunStatus:
     queued = 1
@@ -23,6 +25,7 @@ class RunStatus:
     def lookup(cls, status):
         return cls.LOOKUP.get(status, 'Unknown')
 
+
 class DbtCloudHook(BaseHook):
     """
     Interact with dbt Cloud.
@@ -36,11 +39,16 @@ class DbtCloudHook(BaseHook):
         if 'dbt_cloud_api_token' in conn.extra_dejson:
             dbt_cloud_api_token = conn.extra_dejson['dbt_cloud_api_token']
         else:
-            raise AirflowException('No dbt Cloud API Token was supplied in dbt Cloud connection.')
+            raise AirflowException(
+                'No dbt Cloud API Token was supplied in dbt Cloud connection.'
+            )
+
         if 'dbt_cloud_account_id' in conn.extra_dejson:
             dbt_cloud_account_id = conn.extra_dejson['dbt_cloud_account_id']
         else:
-            raise AirflowException('No dbt Cloud Account ID was supplied in dbt Cloud connection.')
+            raise AirflowException(
+                'No dbt Cloud Account ID was supplied in dbt Cloud connection.'
+            )
 
         return DbtCloud(dbt_cloud_account_id, dbt_cloud_api_token)
 

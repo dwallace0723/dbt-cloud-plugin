@@ -2,6 +2,8 @@
 import json
 import requests
 import time
+from airflow.exceptions import AirflowException
+
 
 class DbtCloud(object):
     """
@@ -20,7 +22,7 @@ class DbtCloud(object):
 
     def _get(self, url_suffix):
         url = self.api_base + url_suffix
-        headers = {'Authorization': 'Token %s' % self.api_token}
+        headers = {'Authorization': f'Token {self.api_token}'}
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             return json.loads(response.content)
@@ -29,7 +31,7 @@ class DbtCloud(object):
 
     def _post(self, url_suffix, data=None):
         url = self.api_base + url_suffix
-        headers = {'Authorization': 'token %s' % self.api_token}
+        headers = {'Authorization': f'Token {self.api_token}'}
         response = requests.post(url, headers=headers, data=data)
         if response.status_code == 200:
             return json.loads(response.content)
@@ -37,13 +39,20 @@ class DbtCloud(object):
             raise RuntimeError(response.content)
 
     def list_jobs(self):
-        return self._get('/accounts/%s/jobs/' % self.account_id).get('data')
+        return self._get(
+            f'/accounts/{self.account_id}/jobs/'
+        ).get('data')
 
     def get_run(self, run_id):
-        return self._get('/accounts/%s/runs/%s/' % (self.account_id, run_id)).get('data')
+        return self._get(
+            f'/accounts/{self.account_id}/runs/{run_id}/'
+        ).get('data')
 
     def trigger_job_run(self, job_id, data=None):
-        return self._post(url_suffix='/accounts/%s/jobs/%s/run/' % (self.account_id, job_id), data=data).get('data')
+        return self._post(
+            url_suffix=f'/accounts/{self.account_id}/jobs/{job_id}/run/',
+            data=data
+        ).get('data')
 
     def try_get_run(self, run_id, max_tries=3):
         for i in range(max_tries):
@@ -51,10 +60,15 @@ class DbtCloud(object):
                 run = self.get_run(run_id)
                 return run
             except RuntimeError as e:
-                print("Encountered a runtime error while fetching status for {}".format(run_id))
+                print(
+                    'Encountered a runtime error while '
+                    f'fetching status for {run_id}'
+                )
                 time.sleep(10)
 
-        raise RuntimeError("Too many failures ({}) while querying for run status".format(run_id))
+        raise RuntimeError(
+            f'Too many failures ({run_id}) while querying for run status'
+        )
 
     def run_job(self, job_name, data=None):
         jobs = self.list_jobs()
@@ -62,8 +76,14 @@ class DbtCloud(object):
         job_matches = [j for j in jobs if j['name'] == job_name]
 
         if len(job_matches) != 1:
-            raise AirflowException("{} jobs found for {}".format(len(job_matches), job_name))
+            raise AirflowException(
+                f'{len(job_matches)} jobs found for {job_name}'
+            )
 
         job_def = job_matches[0]
-        trigger_resp = self.trigger_job_run(job_id=job_def['id'], data=data)
+        trigger_resp = self.trigger_job_run(
+            job_id=job_def['id'],
+            data=data
+        )
+
         return trigger_resp
