@@ -38,11 +38,11 @@ class DbtCloudRunSensor(BaseSensorOperator):
         self.log.info('State of Run ID {}: {}'.format(self.run_id, run_status))
 
         TERMINAL_RUN_STATES = ['Success', 'Error', 'Cancelled']
-        FAILED_RUN_STATES = ['Error']
+        FAILED_RUN_STATES = ['Error', 'Cancelled']
 
-        if run_status in FAILED_RUN_STATES:
-            return AirflowException('dbt cloud Run ID {} Failed.'.format(self.run_id))
-        if run_status in TERMINAL_RUN_STATES:
+        if run_status.strip() in FAILED_RUN_STATES:
+            raise AirflowException('dbt cloud Run ID {} Failed.'.format(self.run_id))
+        if run_status.strip() in TERMINAL_RUN_STATES:
             return True
         else:
             return False
