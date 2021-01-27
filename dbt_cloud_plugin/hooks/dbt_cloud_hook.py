@@ -1,4 +1,4 @@
-from dbt_cloud_plugin.dbt_cloud.dbt_cloud import DbtCloud
+from ..dbt_cloud.dbt_cloud import DbtCloud
 from airflow.hooks.base_hook import BaseHook
 from airflow.exceptions import AirflowException
 

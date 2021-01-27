@@ -4,9 +4,9 @@ import requests
 import time
 
 from airflow.models import BaseOperator
-from dbt_cloud_plugin.hooks.dbt_cloud_hook import DbtCloudHook
 from airflow.utils.decorators import apply_defaults
 from airflow.exceptions import AirflowException
+from ..hooks.dbt_cloud_hook import DbtCloudHook
 
 class DbtCloudRunJobOperator(BaseOperator):
     """
