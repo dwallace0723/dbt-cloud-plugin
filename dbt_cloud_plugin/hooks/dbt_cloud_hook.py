@@ -67,7 +67,7 @@ class DbtCloudHook(BaseHook):
         return status_name
 
     def run_job(self, job_name, git_branch=None, schema_override=None,
-                target_name_override=None):
+                target_name_override=None, steps_override=None):
         dbt_cloud = self.get_conn()
         extra = self._get_conn_extra()
 
@@ -79,6 +79,8 @@ class DbtCloudHook(BaseHook):
             data['schema_override'] = schema_override or extra.get('schema_override', None)
         if target_name_override or extra.get('target_name_override', None):
             data['target_name_override'] = target_name_override or extra.get('target_name_override', None)
+        if steps_override:
+            data['steps_override'] = steps_override
 
         self.log.info(f'Triggering job {job_name} with data {data}')
 

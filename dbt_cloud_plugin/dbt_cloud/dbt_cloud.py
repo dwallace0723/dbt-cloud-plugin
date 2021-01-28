@@ -30,7 +30,7 @@ class DbtCloud(object):
     def _post(self, url_suffix, data=None):
         url = self.api_base + url_suffix
         headers = {'Authorization': 'token %s' % self.api_token}
-        response = requests.post(url, headers=headers, data=data)
+        response = requests.post(url, headers=headers, json=data)
         if response.status_code == 200:
             return json.loads(response.content)
         else:
