@@ -44,6 +44,18 @@ class DbtCloudHook(BaseHook):
 
         return DbtCloud(dbt_cloud_account_id, dbt_cloud_api_token)
 
+    def _get_conn_extra(self):
+        conn = self.get_connection(self.dbt_cloud_conn_id).extra_dejson
+        config = {}
+        if 'git_branch' in conn:
+            config['git_branch'] = conn['git_branch']
+        if 'schema_override' in conn:
+            config['schema_override'] = conn['schema_override']
+        if 'target_name_override' in conn:
+            config['target_name_override'] = conn['target_name_override']
+
+        return config
+
     def get_run_status(self, run_id):
         """
         Return the status of an dbt cloud run.
@@ -53,3 +65,21 @@ class DbtCloudHook(BaseHook):
         run = dbt_cloud.try_get_run(run_id=run_id)
         status_name = RunStatus.lookup(run['status'])
         return status_name
+
+    def run_job(self, job_name, git_branch=None, schema_override=None,
+                target_name_override=None):
+        dbt_cloud = self.get_conn()
+        extra = self._get_conn_extra()
+
+        data = {'cause': 'Kicked off via Airflow'}
+        # add optional settings
+        if git_branch or extra.get('git_branch', None):
+            data['git_branch'] = git_branch or extra.get('git_branch', None)
+        if schema_override or extra.get('schema_override', None):
+            data['schema_override'] = schema_override or extra.get('schema_override', None)
+        if target_name_override or extra.get('target_name_override', None):
+            data['target_name_override'] = target_name_override or extra.get('target_name_override', None)
+
+        self.log.info(f'Triggering job {job_name} with data {data}')
+
+        return dbt_cloud.run_job(job_name, data=data)

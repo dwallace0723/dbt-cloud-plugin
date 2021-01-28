@@ -23,6 +23,9 @@ class DbtCloudRunJobOperator(BaseOperator):
     def __init__(self,
                  dbt_cloud_conn_id=None,
                  job_name=None,
+                 git_branch=None,
+                 schema_override=None,
+                 target_name_override=None,
                  *args, **kwargs):
         super(DbtCloudRunJobOperator, self).__init__(*args, **kwargs)
 
@@ -34,6 +37,9 @@ class DbtCloudRunJobOperator(BaseOperator):
 
         self.dbt_cloud_conn_id = dbt_cloud_conn_id
         self.job_name = job_name
+        self.git_branch = git_branch
+        self.schema_override = schema_override
+        self.target_name_override = target_name_override
 
     def execute(self, **kwargs):
 
@@ -41,9 +47,12 @@ class DbtCloudRunJobOperator(BaseOperator):
 
         try:
             dbt_cloud_hook = DbtCloudHook(dbt_cloud_conn_id=self.dbt_cloud_conn_id)
-            dbt_cloud = dbt_cloud_hook.get_conn()
-            data = {'cause':'Kicked off via Airflow'}
-            trigger_resp = dbt_cloud.run_job(self.job_name, data=data)
+            trigger_resp = dbt_cloud_hook.run_job(
+                self.job_name,
+                git_branch=self.git_branch,
+                schema_override=self.schema_override,
+                target_name_override=self.target_name_override
+            )
             self.log.info('Triggered Run ID {}'.format(trigger_resp['id']))
         except RuntimeError as e:
             raise AirflowException("Error while triggering job {}: {}".format(self.job_name, e))
