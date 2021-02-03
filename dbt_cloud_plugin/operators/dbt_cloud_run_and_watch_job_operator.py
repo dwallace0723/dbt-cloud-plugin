@@ -65,7 +65,7 @@ class DbtCloudRunAndWatchJobOperator(DbtCloudRunJobOperator):
         FAILED_RUN_STATES = ['Error', 'Cancelled']
 
         if run_status.strip() in FAILED_RUN_STATES:
-            raise AirflowException('dbt cloud Run ID {} Failed.'.format(self.run_id))
+            raise AirflowException('dbt cloud Run ID {} Failed.'.format(run_id))
         if run_status.strip() in TERMINAL_RUN_STATES:
             return True
         else:
