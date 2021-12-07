@@ -27,6 +27,7 @@ class DbtCloudRunJobOperator(BaseOperator):
                  schema_override=None,
                  target_name_override=None,
                  steps_override=None,
+                 environment_id=None,
                  *args, **kwargs):
         super(DbtCloudRunJobOperator, self).__init__(*args, **kwargs)
 
@@ -42,6 +43,7 @@ class DbtCloudRunJobOperator(BaseOperator):
         self.schema_override = schema_override
         self.target_name_override = target_name_override
         self.steps_override = steps_override
+        self.environment_id = environment_id
 
     def execute(self, **kwargs):
 
@@ -54,7 +56,8 @@ class DbtCloudRunJobOperator(BaseOperator):
                 git_branch=self.git_branch,
                 schema_override=self.schema_override,
                 target_name_override=self.target_name_override,
-                steps_override=self.steps_override
+                steps_override=self.steps_override,
+                environment_id=self.environment_id
             )
             self.log.info('Triggered Run ID {}'.format(trigger_resp['id']))
         except RuntimeError as e:

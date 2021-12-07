@@ -53,6 +53,8 @@ class DbtCloudHook(BaseHook):
             config['schema_override'] = conn['schema_override']
         if 'target_name_override' in conn:
             config['target_name_override'] = conn['target_name_override']
+        if 'environment_id' in conn:
+            config['environment_id'] = conn['environment_id']
 
         return config
 
@@ -67,7 +69,7 @@ class DbtCloudHook(BaseHook):
         return status_name
 
     def run_job(self, job_name, git_branch=None, schema_override=None,
-                target_name_override=None, steps_override=None):
+                target_name_override=None, steps_override=None, environment_id=None):
         dbt_cloud = self.get_conn()
         extra = self._get_conn_extra()
 
@@ -82,6 +84,9 @@ class DbtCloudHook(BaseHook):
         if steps_override:
             data['steps_override'] = steps_override
 
+        # get environment
+        environment_id = environment_id or extra.get('environment_id', None)
+
         self.log.info(f'Triggering job {job_name} with data {data}')
 
-        return dbt_cloud.run_job(job_name, data=data)
+        return dbt_cloud.run_job(job_name, data=data, environment_id=environment_id)
