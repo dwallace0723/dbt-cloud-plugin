@@ -68,6 +68,39 @@ class DbtCloudHook(BaseHook):
         status_name = RunStatus.lookup(run['status'])
         return status_name
 
+    def get_run_manifest(self, run_id):
+        """
+        Return the manifest.json from a dbt Cloud run.
+        """
+        dbt_cloud = self.get_conn()
+        return dbt_cloud.get_artifact(run_id, 'manifest.json')
+
+    def get_all_run_results(self, run_id):
+        """
+        Return the run_results.json from a dbt Cloud run, concatenated
+        across all (real) steps.
+        """
+        dbt_cloud = self.get_conn()
+
+        # first, determine the number of steps in this job
+        # it will either be defined in the run or in the job definition
+        run = dbt_cloud.get_run(run_id)
+        total_steps = len(run['run_steps'])
+        if total_steps == 0: # not defined on the run, check the job
+            job_id = run['job_id']
+            job = dbt_cloud.get_job(job_id)
+            total_steps = len(job['execute_steps'])
+            
+        # the first 3 steps of a dbt Cloud job are always the same and
+        # never have any run results
+        starting_step = 4
+        all_run_results = []
+        for step in range(starting_step, starting_step + total_steps):
+            run_results = dbt_cloud.get_artifact(run_id, 'run_results.json', step=step)
+            all_run_results.extend(run_results)
+
+        return all_run_results
+
     def run_job(self, job_name, git_branch=None, schema_override=None,
                 target_name_override=None, steps_override=None, environment_id=None):
         dbt_cloud = self.get_conn()
