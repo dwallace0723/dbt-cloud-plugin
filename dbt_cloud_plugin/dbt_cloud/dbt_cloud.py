@@ -74,3 +74,17 @@ class DbtCloud(object):
         job_def = job_matches[0]
         trigger_resp = self.trigger_job_run(job_id=job_def['id'], data=data)
         return trigger_resp
+
+    def get_artifact(self, run_id, artifact_filename, step=None):
+        if step is not None:
+            query_string = f'?step={step}'
+        else:
+            query_string = ''
+            
+        return self._get(
+            f'/accounts/{self.account_id}/runs/{run_id}/artifacts/{artifact_filename}{query_string}'
+        )
+
+    def get_job(self, job_id):
+        return self._get(f'/accounts/{self.account_id}/jobs/{job_id}').get('data')
+    

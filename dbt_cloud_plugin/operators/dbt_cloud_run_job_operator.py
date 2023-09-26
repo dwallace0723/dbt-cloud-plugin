@@ -63,4 +63,6 @@ class DbtCloudRunJobOperator(BaseOperator):
         except RuntimeError as e:
             raise AirflowException("Error while triggering job {}: {}".format(self.job_name, e))
 
-        return trigger_resp['id']
+        run_id = trigger_resp['id']
+        self.xcom_push(kwargs['context'], 'dbt_cloud_run_id', run_id)
+        return run_id
