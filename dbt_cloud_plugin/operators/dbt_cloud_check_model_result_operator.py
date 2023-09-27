@@ -102,6 +102,8 @@ class DbtCloudCheckModelResultOperator(BaseOperator):
             raise DbtModelNotRunException(f'Model {model_id} was not run!')
 
     def execute(self, **kwargs):
+        if self.dbt_cloud_run_id is None or self.dbt_cloud_run_id == '':
+            raise ValueError('dbt_cloud_run_id is empty!')
         dbt_cloud_hook = DbtCloudHook(dbt_cloud_conn_id=self.dbt_cloud_conn_id)
         manifest = dbt_cloud_hook.get_run_manifest(self.dbt_cloud_run_id)
         run_results = dbt_cloud_hook.get_all_run_results(self.dbt_cloud_run_id)

@@ -28,7 +28,7 @@ class DbtCloud(object):
         if response.status_code == 200:
             return json.loads(response.content)
         else:
-            raise RuntimeError(response.content)
+            raise RuntimeError(f'Error getting URL {url}: {response.content}')
 
     def _post(self, url_suffix, data=None):
         url = self.api_base + url_suffix

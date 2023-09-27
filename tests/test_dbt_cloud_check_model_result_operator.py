@@ -130,5 +130,32 @@ class TestDbtCloudCheckModelResultOperator(unittest.TestCase):
         self.operator._check_that_model_passed.assert_any_call('model1', {}, [])
         self.operator._check_that_model_passed.assert_any_call('model2', {}, [])
 
+    @patch('dbt_cloud_plugin.operators.dbt_cloud_check_model_result_operator.DbtCloudHook')
+    def test_execute_fails_with_missing_run_id(self, mock_hook_class):
+        mock_hook = MagicMock()
+        mock_hook_class.return_value = mock_hook
+        mock_hook.get_run_manifest.return_value = {}
+        mock_hook.get_all_run_results.return_value = []
+        self.operator._check_that_model_passed = MagicMock()
+        self.operator._check_that_model_passed.return_value = None
+
+        self.operator.dbt_cloud_run_id = ''
+        with self.assertRaises(ValueError):
+            self.operator.execute()
+
+    @patch('dbt_cloud_plugin.operators.dbt_cloud_check_model_result_operator.DbtCloudHook')
+    def test_execute_fails_with_missing_run_id(self, mock_hook_class):
+        mock_hook = MagicMock()
+        mock_hook_class.return_value = mock_hook
+        mock_hook.get_run_manifest.return_value = {}
+        mock_hook.get_all_run_results.return_value = []
+        self.operator._check_that_model_passed = MagicMock()
+        self.operator._check_that_model_passed.return_value = None
+
+        self.operator.dbt_cloud_run_id = None
+        with self.assertRaises(ValueError):
+            self.operator.execute()
+            
+
 if __name__ == '__main__':
     unittest.main()
