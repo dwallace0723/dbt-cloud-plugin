@@ -5,7 +5,7 @@ from .operators.dbt_cloud_check_model_result_operator import DbtCloudCheckModelR
 from .operators.dbt_cloud_run_job_operator import DbtCloudRunJobOperator
 
 
-def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_models, ensure_models_ran=True):
+def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_models, ensure_models_ran=True, retries=0):
     """
     Create a dependency from one or more tasks on a set of models succeeding
     in a dbt task. This function generates a new DbtCloudCheckModelResultOperator
@@ -50,7 +50,7 @@ def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_mode
         model_names=dependent_models,
         ensure_models_ran=ensure_models_ran,
         trigger_rule='all_done',
-        retries=0
+        retries=retries
     )
 
     return dbt_job_task >> check_dbt_model_results >> downstream_tasks
