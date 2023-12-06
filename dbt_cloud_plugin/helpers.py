@@ -45,7 +45,7 @@ def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_mode
         dependent_models = [dependent_models]
     model_ids = '__'.join(dependent_models)
     task_id = f'check_dbt_model_results__{dbt_job_task.task_id}__{model_ids}'
-    task_id = task_id[:255]
+    task_id = task_id[:255].replace('.', '__')
 
     with TaskGroup(group_id=task_id) as check_dbt_model_results:
         check_upstream_dbt_job_state = ShortCircuitOperator(
