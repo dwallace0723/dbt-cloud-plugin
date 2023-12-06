@@ -6,9 +6,6 @@ from .operators.dbt_cloud_check_model_result_operator import DbtCloudCheckModelR
 from .operators.dbt_cloud_run_job_operator import DbtCloudRunJobOperator
 
 
-def get_state(task_id, **context):
-    return context['dag_run'].get_task_instance(task_id).state
-
 def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_models, ensure_models_ran=True, retries=0):
     """
     Create a dependency from one or more tasks on a set of models succeeding
@@ -50,8 +47,7 @@ def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_mode
     with TaskGroup(group_id=task_id) as check_dbt_model_results:
         check_upstream_dbt_job_state = ShortCircuitOperator(
             task_id='check_upstream_dbt_job_state',
-            python_callable=lambda: get_state(dbt_job_task) == 'success' or get_state(dbt_job_task) == 'failed',
-            provide_context=True,
+            python_callable=lambda: dbt_job_task.state == 'success' or dbt_job_task.state == 'failed',
         )
 
         check_dbt_model_successful = DbtCloudCheckModelResultOperator(
