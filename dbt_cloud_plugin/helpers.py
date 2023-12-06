@@ -1,9 +1,13 @@
 from airflow.utils.task_group import TaskGroup
 from airflow.models import BaseOperator
+from airflow.operators.python_operator import ShortCircuitOperator
 
 from .operators.dbt_cloud_check_model_result_operator import DbtCloudCheckModelResultOperator
 from .operators.dbt_cloud_run_job_operator import DbtCloudRunJobOperator
 
+
+def get_state(task_id, **context):
+    return context['dag_run'].get_task_instance(task_id).state
 
 def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_models, ensure_models_ran=True, retries=0):
     """
@@ -43,14 +47,22 @@ def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_mode
     task_id = f'check_dbt_model_results__{dbt_job_task.task_id}__{model_ids}'
     task_id = task_id[:255]
 
-    check_dbt_model_results = DbtCloudCheckModelResultOperator(
-        task_id=task_id,
-        dbt_cloud_conn_id=dbt_job_task.dbt_cloud_conn_id,
-        dbt_cloud_run_id=f'{{{{ ti.xcom_pull(task_ids="{dbt_job_task.task_id}", key="dbt_cloud_run_id") }}}}',
-        model_names=dependent_models,
-        ensure_models_ran=ensure_models_ran,
-        trigger_rule='all_done',
-        retries=retries
-    )
+    with TaskGroup(group_id=task_id) as check_dbt_model_results:
+        check_upstream_dbt_job_state = ShortCircuitOperator(
+            task_id='check_upstream_dbt_job_state',
+            python_callable=lambda: get_state(dbt_job_task) == 'success' or get_state(dbt_job_task) == 'failed',
+            provide_context=True,
+        )
+
+        check_dbt_model_successful = DbtCloudCheckModelResultOperator(
+            task_id='check_dbt_model_successful',
+            dbt_cloud_conn_id=dbt_job_task.dbt_cloud_conn_id,
+            dbt_cloud_run_id=f'{{{{ ti.xcom_pull(task_ids="{dbt_job_task.task_id}", key="dbt_cloud_run_id") }}}}',
+            model_names=dependent_models,
+            ensure_models_ran=ensure_models_ran,
+            retries=retries
+        )
+
+        check_upstream_dbt_job_state >> check_dbt_model_successful
 
     return dbt_job_task >> check_dbt_model_results >> downstream_tasks
