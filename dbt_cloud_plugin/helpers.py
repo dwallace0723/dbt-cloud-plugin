@@ -48,6 +48,7 @@ def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_mode
         check_upstream_dbt_job_state = ShortCircuitOperator(
             task_id='check_upstream_dbt_job_state',
             python_callable=lambda: dbt_job_task.state == 'success' or dbt_job_task.state == 'failed',
+            trigger_rule='all_done'
         )
 
         check_dbt_model_successful = DbtCloudCheckModelResultOperator(
