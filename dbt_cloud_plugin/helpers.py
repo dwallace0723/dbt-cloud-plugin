@@ -47,7 +47,7 @@ def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_mode
     with TaskGroup(group_id=task_id) as check_dbt_model_results:
         check_upstream_dbt_job_state = ShortCircuitOperator(
             task_id='check_upstream_dbt_job_state',
-            python_callable=lambda **context: context['dag_run'].get_task_instance(task_id).state in ['success', 'failed'],
+            python_callable=lambda **context: context['dag_run'].get_task_instance(dbt_job_task).state in ['success', 'failed'],
             trigger_rule='all_done',
             on_failure_callback=None,
             provide_context=True
