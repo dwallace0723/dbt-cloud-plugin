@@ -49,7 +49,6 @@ def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_mode
             task_id='check_upstream_dbt_job_state',
             python_callable=lambda **context: context['dag_run'].get_task_instance(dbt_job_task.task_id).state in ['success', 'failed'],
             trigger_rule='all_done',
-            on_failure_callback=None,
             provide_context=True
         )
 
