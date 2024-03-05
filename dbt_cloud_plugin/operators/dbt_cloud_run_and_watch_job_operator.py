@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-import json
-import requests
 import time
 
-from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 from airflow.exceptions import AirflowException, AirflowSkipException
 from ..hooks.dbt_cloud_hook import DbtCloudHook
