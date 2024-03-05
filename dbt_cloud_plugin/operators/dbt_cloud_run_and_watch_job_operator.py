@@ -8,6 +8,7 @@ from airflow.utils.decorators import apply_defaults
 from airflow.exceptions import AirflowException, AirflowSkipException
 from ..hooks.dbt_cloud_hook import DbtCloudHook
 from ..operators.dbt_cloud_run_job_operator import DbtCloudRunJobOperator
+from ..helpers import DbtCloudRunException
 
 
 class DbtCloudRunAndWatchJobOperator(DbtCloudRunJobOperator):
@@ -61,12 +62,31 @@ class DbtCloudRunAndWatchJobOperator(DbtCloudRunJobOperator):
         run_status = dbt_cloud_hook.get_run_status(run_id=run_id)
         self.log.info('State of Run ID {}: {}'.format(run_id, run_status))
 
-        TERMINAL_RUN_STATES = ['Success', 'Error', 'Cancelled']
-        FAILED_RUN_STATES = ['Error', 'Cancelled']
+        if run_status.strip() == 'Cancelled':
+            raise AirflowException(f'dbt cloud Run ID {run_id} Cancelled.')
+        
+        elif run_status.strip() == 'Error':
+            run_results = dbt_cloud_hook.get_all_run_results(run_id=run_id)
+            manifest = dbt_cloud_hook.get_run_manifest(run_id=run_id)
 
-        if run_status.strip() in FAILED_RUN_STATES:
-            raise AirflowException('dbt cloud Run ID {} Failed.'.format(run_id))
-        if run_status.strip() in TERMINAL_RUN_STATES:
+            errors = {}
+            fail_states = {result['unique_id'] for result in run_results if result['status'] in ['error', 'failure']}
+            for unique_id in fail_states:
+                errors[unique_id] = {
+                    'tags': manifest['nodes'][unique_id]['tags'], 
+                    'resource_type': manifest['nodes'][unique_id]['resource_type'],
+                    'depends_on': manifest['nodes'][unique_id]['depends_on']['nodes'],
+                    'parent_models': {model: manifest['nodes'][model]['tags'] for model in manifest['nodes'][unique_id]['depends_on']['nodes']}
+                }
+
+            raise DbtCloudRunException(
+                dbt_cloud_run_id=run_id,
+                error_message=f'dbt cloud Run ID {run_id} Failed.', 
+                dbt_errors_dict=errors
+            )
+            
+        elif run_status.strip() == 'Success':
             return True
+        
         else:
             return False

@@ -1,10 +1,28 @@
 from airflow.utils.task_group import TaskGroup
 from airflow.models import BaseOperator
 from airflow.operators.python_operator import ShortCircuitOperator
+from airflow.utils.decorators import apply_defaults
+from airflow.exceptions import AirflowException
 
 from .operators.dbt_cloud_check_model_result_operator import DbtCloudCheckModelResultOperator
 from .operators.dbt_cloud_run_job_operator import DbtCloudRunJobOperator
 
+
+class DbtCloudRunException(AirflowException):
+    @apply_defaults
+    def __init__(self, dbt_cloud_run_id: int, error_message: str, dbt_errors_dict: dict, *args, **kwargs):
+        if dbt_cloud_run_id is None:
+            raise ValueError('dbt_cloud_run_id cannot be None.')
+        if error_message is None:
+            raise ValueError('error_message cannot be None.')
+        if dbt_errors_dict is None:
+            raise ValueError('dbt_errors_dict cannot be None.')
+        
+        self.dbt_cloud_run_id = dbt_cloud_run_id
+        self.error_message = error_message
+        self.dbt_errors_dict = dbt_errors_dict
+
+        super(AirflowException, self).__init__(error_message, *args, **kwargs)
 
 def generate_dbt_model_dependency(dbt_job_task, downstream_tasks, dependent_models, ensure_models_ran=True, retries=0, params=None):
     """
