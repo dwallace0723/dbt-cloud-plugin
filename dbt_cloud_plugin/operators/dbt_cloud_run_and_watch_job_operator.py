@@ -31,8 +31,13 @@ class DbtCloudRunAndWatchJobOperator(DbtCloudRunJobOperator):
         super(DbtCloudRunAndWatchJobOperator, self).__init__(*args, **kwargs)
 
     def execute(self, **kwargs):
-        run_id = super(DbtCloudRunAndWatchJobOperator, self).execute(**kwargs)
+        response = super(DbtCloudRunAndWatchJobOperator, self).execute(**kwargs)
+        run_id = response['id']
 
+        self.account_id = response['job']['account_id']
+        self.project_id = response['job']['project_id']
+        self.environment_id = response['job']['environment_id']
+        
         # basically copy-pasting the Sensor code
         self.log.info(f'Starting poke for job {run_id}')
         try_number = 1
@@ -78,6 +83,8 @@ class DbtCloudRunAndWatchJobOperator(DbtCloudRunJobOperator):
 
             raise DbtCloudRunException(
                 dbt_cloud_run_id=run_id,
+                dbt_cloud_account_id=self.account_id,
+                dbt_cloud_project_id=self.project_id,
                 error_message=f'dbt cloud Run ID {run_id} Failed.', 
                 dbt_errors_dict=errors
             )

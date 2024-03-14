@@ -65,4 +65,4 @@ class DbtCloudRunJobOperator(BaseOperator):
 
         run_id = trigger_resp['id']
         self.xcom_push(kwargs['context'], 'dbt_cloud_run_id', run_id)
-        return run_id
+        return trigger_resp

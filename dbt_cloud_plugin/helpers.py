@@ -10,8 +10,12 @@ from .operators.dbt_cloud_run_job_operator import DbtCloudRunJobOperator
 
 class DbtCloudRunException(AirflowException):
     @apply_defaults
-    def __init__(self, dbt_cloud_run_id: int, error_message: str, dbt_errors_dict: dict, *args, **kwargs):
+    def __init__(self, dbt_cloud_run_id: int, dbt_cloud_account_id: int, dbt_cloud_project_id: int, error_message: str, dbt_errors_dict: dict, *args, **kwargs):
         if dbt_cloud_run_id is None:
+            raise ValueError('dbt_cloud_run_id cannot be None.')
+        if dbt_cloud_account_id is None:
+            raise ValueError('dbt_cloud_run_id cannot be None.')
+        if dbt_cloud_project_id is None:
             raise ValueError('dbt_cloud_run_id cannot be None.')
         if error_message is None:
             raise ValueError('error_message cannot be None.')
@@ -19,6 +23,8 @@ class DbtCloudRunException(AirflowException):
             raise ValueError('dbt_errors_dict cannot be None.')
         
         self.dbt_cloud_run_id = dbt_cloud_run_id
+        self.dbt_cloud_account_id = dbt_cloud_account_id
+        self.dbt_cloud_project_id = dbt_cloud_project_id
         self.error_message = error_message
         self.dbt_errors_dict = dbt_errors_dict
 
